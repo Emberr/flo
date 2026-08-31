@@ -190,14 +190,12 @@ class AlbumService {
     songIdsToAdd: [String] = [], songIndexesToRemove: [Int] = [],
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
-    var parameters: [String: Any] = [
-      "playlistId": id,
-      "songIdToAdd": songIdsToAdd,
-      "songIndexToRemove": songIndexesToRemove,
-    ]
+    var parameters: [String: Any] = ["playlistId": id]
     if let name { parameters["name"] = name }
     if let comment { parameters["comment"] = comment }
     if let isPublic { parameters["public"] = isPublic }
+    if !songIdsToAdd.isEmpty { parameters["songIdToAdd"] = songIdsToAdd }
+    if !songIndexesToRemove.isEmpty { parameters["songIndexToRemove"] = songIndexesToRemove }
 
     mutatePlaylist(
       endpoint: API.SubsonicEndpoint.updatePlaylist,
@@ -212,7 +210,7 @@ class AlbumService {
     updatePlaylist(
       id: id,
       songIdsToAdd: songIds,
-      songIndexesToRemove: Array(0..<currentSongCount),
+      songIndexesToRemove: Array((0..<currentSongCount).reversed()),
       completion: completion)
   }
 

@@ -48,6 +48,7 @@ struct PlaylistDetailView: View {
   @State private var showDownloadSheet: Bool = false
   @State private var showDeleteAlbumAlert: Bool = false
   @State private var songToAdd: Song?
+  @State private var showEditPlaylist = false
 
   var body: some View {
     ScrollView {
@@ -195,6 +196,10 @@ struct PlaylistDetailView: View {
         .listStyle(PlainListStyle()).customFont(.body)
       }
       .toolbar {
+        Button("Edit", systemImage: "pencil") {
+          showEditPlaylist = true
+        }
+
         DownloadButton(
           isDownloading: downloadViewModel.isDownloading(viewModel.playlist.name),
           isDownloaded: downloadViewModel.isDownloading(viewModel.playlist.name)
@@ -252,6 +257,9 @@ struct PlaylistDetailView: View {
       }
       .sheet(item: $songToAdd) { song in
         AddToPlaylistView(viewModel: viewModel, song: song)
+      }
+      .sheet(isPresented: $showEditPlaylist) {
+        EditPlaylistView(viewModel: viewModel, playlist: viewModel.playlist)
       }
       .onReceive(downloadViewModel.$downloadWatcher) { newValue in
         if newValue {
