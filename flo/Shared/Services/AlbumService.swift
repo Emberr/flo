@@ -227,7 +227,11 @@ class AlbumService {
     endpoint: String, parameters: [String: Any],
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
-    APIManager.shared.SubsonicEndpointRequest(endpoint: endpoint, parameters: parameters) {
+    APIManager.shared.SubsonicEndpointRequest(
+      endpoint: endpoint,
+      parameters: parameters,
+      encoding: URLEncoding(destination: .queryString, arrayEncoding: .noBrackets)
+    ) {
       (response: DataResponse<SubsonicMutationResponse, AFError>) in
       switch response.result {
       case .success(let response) where response.subsonicResponse.status == "ok":

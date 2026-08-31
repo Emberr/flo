@@ -10,6 +10,8 @@ struct LikedSongsView: View {
   @EnvironmentObject private var viewModel: AlbumViewModel
   @EnvironmentObject private var playerViewModel: PlayerViewModel
 
+  @State private var songToAdd: Song?
+
   var body: some View {
     ScrollView {
       LazyVStack {
@@ -64,6 +66,11 @@ struct LikedSongsView: View {
               id: "starred-songs", name: "Liked Songs", songs: viewModel.starredSongs)
             playerViewModel.playBySong(idx: idx, item: liked, isFromLocal: false)
           }
+          .contextMenu {
+            Button("Add to Playlist", systemImage: "text.badge.plus") {
+              songToAdd = song
+            }
+          }
           .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
@@ -76,6 +83,9 @@ struct LikedSongsView: View {
     }
     .onChange(of: playerViewModel.isStarred) { _ in
       viewModel.fetchStarredSongs()
+    }
+    .sheet(item: $songToAdd) { song in
+      AddToPlaylistView(viewModel: viewModel, song: song)
     }
   }
 }

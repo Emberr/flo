@@ -13,6 +13,7 @@ struct SongsView: View {
   @EnvironmentObject private var playerViewModel: PlayerViewModel
 
   @State private var searchSong = ""
+  @State private var songToAdd: Song?
 
   var filteredSongs: [Song] {
     if searchSong.isEmpty {
@@ -86,6 +87,11 @@ struct SongsView: View {
               idx: selectedSongIdx, item: playlist, isFromLocal: false
             )
           }
+          .contextMenu {
+            Button("Add to Playlist", systemImage: "text.badge.plus") {
+              songToAdd = song
+            }
+          }
           .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
@@ -100,6 +106,9 @@ struct SongsView: View {
         placement: .navigationBarDrawer(displayMode: .always),
         prompt: "Search"
       )
+    }
+    .sheet(item: $songToAdd) { song in
+      AddToPlaylistView(viewModel: viewModel, song: song)
     }
   }
 }

@@ -47,6 +47,7 @@ struct PlaylistDetailView: View {
 
   @State private var showDownloadSheet: Bool = false
   @State private var showDeleteAlbumAlert: Bool = false
+  @State private var songToAdd: Song?
 
   var body: some View {
     ScrollView {
@@ -158,6 +159,10 @@ struct PlaylistDetailView: View {
           }
           .contextMenu {
             VStack {
+              Button("Add to Playlist", systemImage: "text.badge.plus") {
+                songToAdd = song
+              }
+
               if !song.fileUrl.isEmpty {
                 Button(role: .destructive) {
                   viewModel.removeDownloadSong(
@@ -244,6 +249,9 @@ struct PlaylistDetailView: View {
           .onDisappear {
             viewModel.setActivePlaylist(playlist: viewModel.playlist)
           }
+      }
+      .sheet(item: $songToAdd) { song in
+        AddToPlaylistView(viewModel: viewModel, song: song)
       }
       .onReceive(downloadViewModel.$downloadWatcher) { newValue in
         if newValue {

@@ -15,6 +15,8 @@ struct SongView: View {
   var playerViewModel: PlayerViewModel
   var isDownloadScreen: Bool = false
 
+  @State private var songToAdd: Song?
+
   var body: some View {
     VStack {
       ForEach(Array(viewModel.album.songs.enumerated()), id: \.element) { idx, song in
@@ -67,6 +69,12 @@ struct SongView: View {
         }
         .contextMenu {
           VStack {
+            if !isDownloadScreen {
+              Button("Add to Playlist", systemImage: "text.badge.plus") {
+                songToAdd = song
+              }
+            }
+
             if !song.fileUrl.isEmpty {
               Button(role: .destructive) {
                 viewModel.removeDownloadSong(album: viewModel.album, songId: song.id)
@@ -97,6 +105,9 @@ struct SongView: View {
         }
       }
       .listStyle(PlainListStyle()).customFont(.body)
+    }
+    .sheet(item: $songToAdd) { song in
+      AddToPlaylistView(viewModel: viewModel, song: song)
     }
   }
 }
