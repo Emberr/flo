@@ -16,6 +16,10 @@ struct PlaylistView: View {
 
   @State private var searchPlaylist = ""
   @State private var showDownloadSheet: Bool = false
+  @State private var showCreatePlaylist = false
+  @State private var playlistName = ""
+  @State private var playlistToDelete: Playlist?
+  @State private var errorMessage: String?
 
   private var columns: [GridItem] {
     if horizontalSizeClass == .regular {
@@ -50,6 +54,11 @@ struct PlaylistView: View {
           } label: {
             PlaylistsView(viewModel: viewModel, playlist: playlist)
           }
+          .contextMenu {
+            Button("Delete", systemImage: "trash", role: .destructive) {
+              playlistToDelete = playlist
+            }
+          }
         }
       }
       .padding(.top, 10)
@@ -58,6 +67,10 @@ struct PlaylistView: View {
       )
     }
     .toolbar {
+      Button("New Playlist", systemImage: "plus") {
+        showCreatePlaylist = true
+      }
+
       if downloadViewModel.hasDownloadQueue() {
         Button(action: {
           showDownloadSheet.toggle()
@@ -68,6 +81,61 @@ struct PlaylistView: View {
     }
     .sheet(isPresented: $showDownloadSheet) {
       DownloadQueueView().environmentObject(downloadViewModel)
+    }
+    .alert("New Playlist", isPresented: $showCreatePlaylist) {
+      TextField("Name", text: $playlistName)
+      Button("Cancel", role: .cancel) {
+        playlistName = ""
+      }
+      Button("Create") {
+        let name = playlistName.trimmingCharacters(in: .whitespacesAndNewlines)
+        AlbumService.shared.createPlaylist(name: name) { result in
+          DispatchQueue.main.async {
+            switch result {
+            case .success:
+              playlistName = ""
+              Task { await viewModel.refreshPlaylists() }
+            case .failure(let error):
+              errorMessage = error.localizedDescription
+            }
+          }
+        }
+      }
+      .disabled(playlistName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+    .confirmationDialog(
+      "Delete \(playlistToDelete?.name ?? "playlist")?",
+      isPresented: Binding(
+        get: { playlistToDelete != nil },
+        set: { if !$0 { playlistToDelete = nil } }
+      ),
+      titleVisibility: .visible
+    ) {
+      Button("Delete", role: .destructive) {
+        guard let playlist = playlistToDelete else { return }
+        AlbumService.shared.deletePlaylist(id: playlist.id) { result in
+          DispatchQueue.main.async {
+            playlistToDelete = nil
+            switch result {
+            case .success:
+              Task { await viewModel.refreshPlaylists() }
+            case .failure(let error):
+              errorMessage = error.localizedDescription
+            }
+          }
+        }
+      }
+    }
+    .alert(
+      "Unable to Update Playlist",
+      isPresented: Binding(
+        get: { errorMessage != nil },
+        set: { if !$0 { errorMessage = nil } }
+      )
+    ) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text(errorMessage ?? "")
     }
     .navigationTitle("Playlists")
     .refreshable {
