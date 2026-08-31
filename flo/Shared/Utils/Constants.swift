@@ -34,6 +34,9 @@ enum API {
     static let star = "/rest/star"
     static let unstar = "/rest/unstar"
     static let getStarred2 = "/rest/getStarred2"
+    static let createPlaylist = "/rest/createPlaylist"
+    static let updatePlaylist = "/rest/updatePlaylist"
+    static let deletePlaylist = "/rest/deletePlaylist"
   }
 }
 

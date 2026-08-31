@@ -76,6 +76,18 @@ extension SubsonicResponse {
 
 typealias BasicSubsonicResponse = SubsonicResponse<BasicResponse>
 
+struct SubsonicMutationResponse: Decodable {
+  let subsonicResponse: Response
+
+  struct Response: Decodable {
+    let status: String
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case subsonicResponse = "subsonic-response"
+  }
+}
+
 struct Starred2Response: Codable {
   struct SubsonicResponseBody: Codable {
     struct Starred2: Codable {

@@ -176,6 +176,70 @@ class AlbumService {
     }
   }
 
+  func createPlaylist(
+    name: String, songIds: [String] = [], completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    mutatePlaylist(
+      endpoint: API.SubsonicEndpoint.createPlaylist,
+      parameters: ["name": name, "songId": songIds],
+      completion: completion)
+  }
+
+  func updatePlaylist(
+    id: String, name: String? = nil, comment: String? = nil, isPublic: Bool? = nil,
+    songIdsToAdd: [String] = [], songIndexesToRemove: [Int] = [],
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    var parameters: [String: Any] = [
+      "playlistId": id,
+      "songIdToAdd": songIdsToAdd,
+      "songIndexToRemove": songIndexesToRemove,
+    ]
+    if let name { parameters["name"] = name }
+    if let comment { parameters["comment"] = comment }
+    if let isPublic { parameters["public"] = isPublic }
+
+    mutatePlaylist(
+      endpoint: API.SubsonicEndpoint.updatePlaylist,
+      parameters: parameters,
+      completion: completion)
+  }
+
+  func reorderPlaylist(
+    id: String, songIds: [String], currentSongCount: Int,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    updatePlaylist(
+      id: id,
+      songIdsToAdd: songIds,
+      songIndexesToRemove: Array(0..<currentSongCount),
+      completion: completion)
+  }
+
+  func deletePlaylist(id: String, completion: @escaping (Result<Void, Error>) -> Void) {
+    mutatePlaylist(
+      endpoint: API.SubsonicEndpoint.deletePlaylist,
+      parameters: ["id": id],
+      completion: completion)
+  }
+
+  private func mutatePlaylist(
+    endpoint: String, parameters: [String: Any],
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    APIManager.shared.SubsonicEndpointRequest(endpoint: endpoint, parameters: parameters) {
+      (response: DataResponse<SubsonicMutationResponse, AFError>) in
+      switch response.result {
+      case .success(let response) where response.subsonicResponse.status == "ok":
+        completion(.success(()))
+      case .success:
+        completion(.failure(AuthError.server(message: "Playlist update failed.")))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+
   // FIXME: currently we can't stream from the local (offline) one :)
   func getSongsByPlaylist(id: String, completion: @escaping (Result<[Song], Error>) -> Void) {
     let params: [String: Any] = [
